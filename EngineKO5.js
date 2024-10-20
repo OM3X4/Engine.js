@@ -657,7 +657,7 @@ export function engine(fen , isWhite = true){
             numberOfPieces++;
         }
     }
-    const maxdepth = 3
+    const maxdepth = 4
     let moves = BasicSorting(chess)
     const opening = getOpeningMove(fen);
     if(opening != 0){

@@ -304,11 +304,11 @@ function searchSorting(fen ,isWhite){
         });
         // innerMoves1 = innerMoves1.map(move => { return {from: move.from() , to:move.to()}})
         scoreCounter.set(move , BestScore)
-        fenMove.set(innerFen , innerMoves1.slice(0 , 10))
+        fenMove.set(innerFen , innerMoves1.slice(0 , 20))
     }
     let moves1 = moves.sort((a  , b ) => scoreCounter.get(b) - scoreCounter.get(a))
     // moves1 = moves1.map(move => { return {from: move.from() , to:move.to()}})
-    fenMove.set(fen , moves.slice(0 , 5))
+    fenMove.set(fen , moves.slice(0 , 10))
 
     return fenMove
 
@@ -640,6 +640,8 @@ function minimax(fen , depth , isMaximizing, steps , alpha , beta , skips , isWh
         let moves = BasicSorting(base);
         if(MovesMap.has(fen)){
             moves = MovesMap.get(fen)
+        }else if(depth == maxDepth - 1){
+            moves = moves.filter(move => { return move.isCapture();})
         }
 
         if(isMaximizing){
@@ -686,7 +688,7 @@ export function engine(fen , isWhite = false){
             numberOfPieces++;
         }
     }
-    const maxdepth = 4
+    const maxdepth = 5
     const moveOpening = BasicSorting(chess)
     const opening = getOpeningMove(fen);
     if(opening != 0){
@@ -763,14 +765,14 @@ if (args.length >= 1) {
 
 // console.time("time")
 
-// console.log(searchSorting("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1" , false)) // 39 move
+// console.log(engine("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1" , false)) // starting position
 
 
 // console.timeEnd("time")
 
 // console.time("time")
 
-// console.log(searchSorting2("r2q1rk1/ppp2ppp/2n2n2/2bpp3/2BPP3/2N2N2/PPP2PPP/R1BQ1RK1 w - - 0 1" , false))
+// console.log(engine("r2q1rk1/ppp2ppp/2n2n2/2bpp3/2BPP3/2N2N2/PPP2PPP/R1BQ1RK1 w - - 0 1" , false))
 
 // console.timeEnd("time")
 
