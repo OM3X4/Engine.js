@@ -1,0 +1,6 @@
+{
+  "type": "module",
+  "dependencies": {
+    "kokopu": "^4.11.2"
+  }
+}

@@ -661,7 +661,7 @@ export function engine(fen , isWhite = true){
     let moves = BasicSorting(chess)
     const opening = getOpeningMove(fen);
     if(opening != 0){
-        for(const move of moveOpening && false){
+        for(const move of moveOpening){
             if(move.from() == opening[0] && move.to() == opening[1]){
                 // console.log("Theory")
                 // return [move.from() , move.to() , false]
