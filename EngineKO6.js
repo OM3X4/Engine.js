@@ -304,11 +304,11 @@ function searchSorting(fen ,isWhite){
         });
         // innerMoves1 = innerMoves1.map(move => { return {from: move.from() , to:move.to()}})
         scoreCounter.set(move , BestScore)
-        fenMove.set(innerFen , innerMoves1.slice(0 , 20))
+        fenMove.set(innerFen , innerMoves1.slice(0 , 100))
     }
     let moves1 = moves.sort((a  , b ) => scoreCounter.get(b) - scoreCounter.get(a))
     // moves1 = moves1.map(move => { return {from: move.from() , to:move.to()}})
-    fenMove.set(fen , moves.slice(0 , 10))
+    fenMove.set(fen , moves1.slice(0 , 100))
 
     return fenMove
 
