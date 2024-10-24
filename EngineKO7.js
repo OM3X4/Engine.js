@@ -661,7 +661,7 @@ function minimax(fen , depth , isMaximizing, steps , alpha , beta , skips , isWh
         let moves = BasicSorting(base);
         if(MovesMap.has(fen)){
             moves = MovesMap.get(fen)}
-        else if(depth == maxDepth - 1){
+        else if(depth == maxDepth - 1 && false){
             
             moves = moves.filter(move => { return move.isCapture();})
             if(moves.length == 0){
@@ -713,7 +713,7 @@ export function engine(fen , isWhite = false){
             numberOfPieces++;
         }
     }
-    const maxdepth = 5
+    const maxdepth = 3
     const moveOpening = BasicSorting(chess)
     const opening = getOpeningMove(fen);
     if(opening != 0){
@@ -730,10 +730,10 @@ export function engine(fen , isWhite = false){
     // console.timeEnd("sorting time")
     // const MovesMap = new Map();
     let moves = BasicSorting(chess)
-    if(MovesMap.has(fen)){
-        moves = MovesMap.get(fen)
-        // console.log(moves.map(move => { return {from: move.from() , to: move.to()}}))
-    }
+    // if(MovesMap.has(fen)){
+    //     moves = MovesMap.get(fen)
+    //     // console.log(moves.map(move => { return {from: move.from() , to: move.to()}}))
+    // }
 
 
 
