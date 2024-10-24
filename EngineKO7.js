@@ -271,107 +271,47 @@ function getOpeningMove(fen){
         return [moves[index].slice(0 ,2) ,moves[index].slice(2 ,4) ]
     }else return 0
 }
-function searchSorting2(fen, isWhite) {
-    let chess = new Position(fen);
-    let steps = { count: 0 };
-    let skips = { count: 0 };
-    let moves = BasicSorting(chess);
-    let scoreCounter = new Map();
-    let fenMove = new Map();
-
-    let alpha = -Infinity;
-    let beta = Infinity;
-
-    for (const move of moves) {
-        chess = new Position(fen);
-        chess.play(move);
-        const scoreCounterInner = new Map();
-        let innerMoves = BasicSorting(chess);
-        const innerFen = chess.fen();
-        let BestScore = Infinity;
-
-        let innerAlpha = -Infinity;
-        let innerBeta = Infinity;
-
-        for (const innerMove of innerMoves) {
-            chess.play(innerMove);
-            const scoreCounterInnerInner = new Map();
-            let innerInnerMoves = BasicSorting(chess);
-            const innerInnerFen = chess.fen();
-            let InnerBestScore = Infinity;
-
-            let innerInnerAlpha = -Infinity;
-            let innerInnerBeta = Infinity;
-
-            for (const innerInnerMove of innerInnerMoves) {
-                chess.play(innerInnerMove);
-                let score = minimax(chess.fen(), 0, true, steps, innerInnerAlpha, innerInnerBeta, skips, isWhite, 1, new Map());
-                scoreCounterInnerInner.set(innerInnerMove, score);
-                InnerBestScore = Math.min(score, InnerBestScore);
-                
-                // Alpha-beta pruning for innermost loop
-                innerInnerBeta = Math.min(innerInnerBeta, score);
-                if (innerInnerAlpha >= innerInnerBeta) {
-                    break; // Beta cutoff
-                }
-                
-                chess = new Position(innerInnerFen);
-            }
-
-            innerInnerMoves = innerInnerMoves.sort((a, b) => scoreCounterInnerInner.get(a) - scoreCounterInnerInner.get(b));
-            scoreCounterInner.set(innerMove, InnerBestScore);
-            fenMove.set(innerInnerFen, innerInnerMoves.slice(0, 5));
-            
-            // Alpha-beta pruning for middle loop
-            innerBeta = Math.min(innerBeta, InnerBestScore);
-            if (innerAlpha >= innerBeta) {
-                break; // Beta cutoff
-            }
-            
-            chess = new Position(innerFen);
-        }
-
-        innerMoves = innerMoves.sort((a, b) => scoreCounterInner.get(a) - scoreCounterInner.get(b));
-        BestScore = Math.min(...scoreCounterInner.values());
-        scoreCounter.set(move, BestScore);
-        fenMove.set(innerFen, innerMoves.slice(0, 5));
-
-        // Alpha-beta pruning for outermost loop
-        beta = Math.min(beta, BestScore);
-        if (alpha >= beta) {
-            break; // Beta cutoff
-        }
-    }
-
-    moves = moves.sort((a, b) => scoreCounter.get(b) - scoreCounter.get(a));
-    fenMove.set(fen, moves.slice(0, 5));
-    return fenMove;
-}
-
-function searchSorting(fen , isWhite = true){
+function searchSorting(fen ,isWhite){
     let chess = new Position(fen);
     let steps = { count:0 }
     let skips = { count:0 }
     let moves = BasicSorting(chess);
     let scoreCounter = new Map()
-    
-    
+    let fenMove = new Map()
+
     for(const move of moves){
-        chess.play(move)
-        let score = minimax(chess.fen() , 0 , false , steps , -Infinity , Infinity , skips , isWhite , 0 , 3)
-        scoreCounter.set(move , score)
         chess = new Position(fen)
+        chess.play(move);
+        const scoreCounterInner = new Map()
+        let innerMoves = BasicSorting(chess);
+        const innerFen = chess.fen()
+        let BestScore = Infinity;
+        for(const innerMove of innerMoves){
+            chess.play(innerMove);
+            let score = evaluate(chess.fen() , isWhite , 2)
+            scoreCounterInner.set(innerMove , score)
+            BestScore = Math.min(score , BestScore)
+            chess = new Position(innerFen)
+        }
+        let innerMoves1 = innerMoves.sort((a, b) => {
+            if (isWhite) {
+                // Engine is Black, sort ascending (prefer lower scores)
+                return scoreCounterInner.get(b) - scoreCounterInner.get(a);
+            } else {
+                // Engine is White, sort descending (prefer higher scores)
+                return scoreCounterInner.get(a) - scoreCounterInner.get(b);
+            }
+        });
+        // innerMoves1 = innerMoves1.map(move => { return {from: move.from() , to:move.to()}})
+        scoreCounter.set(move , BestScore)
+        fenMove.set(innerFen , innerMoves1.slice(0 , 20))
     }
-    
-    moves.sort((a , b) => scoreCounter.get(b) - scoreCounter.get(a))
-    
-    if(moves.length > 3){
-        
-        return moves.slice(0 , 3)
-    }else {
-        return moves
-    }
-    
+    let moves1 = moves.sort((a  , b ) => scoreCounter.get(b) - scoreCounter.get(a))
+    // moves1 = moves1.map(move => { return {from: move.from() , to:move.to()}})
+    fenMove.set(fen , moves1.slice(0 , 15))
+
+    return fenMove
+
 }
 
 function BasicSorting(chess){
@@ -577,7 +517,7 @@ function pawnEval(square , chess){
     return 0;
 }
 
-function conquer(square , chess){
+function conquer(chess){
     const squares = {
         // Central squares (higher importance)
         
@@ -605,13 +545,34 @@ function conquer(square , chess){
     };
 
     let score = 0;
-    if(chess.isAttacked(square , "w")){
-        score += squares[square] * 0.5;
-    }else if(chess.isAttacked(square , "b")){
-        score -= squares[square] * 0.5;
+    if(chess.turn() == "w"){
+        const moves = chess.moves()
+        for(const move of moves){
+            score += squares[move.to()]
+        }
+        chess.playNullMove();
+        const moves2 = chess.moves();
+        for(const move of moves2){
+            score -= squares[move.to()]
+        }
+        chess.playNullMove()
+    }else{
+        const moves = chess.moves()
+        for(const move of moves){
+            score -= squares[move.to()]
+        }
+        chess.playNullMove();
+        const moves2 = chess.moves();
+        for(const move of moves2){
+            score += squares[move.to()]
+        }
+        chess.playNullMove()
     }
     return score;
+
 }
+
+
 
 function development(square , chess){
     const minor = ["n" , "b" , "q"]
@@ -660,9 +621,9 @@ function evaluate(fen , isWhite , depth){
         }
         score += material(squareNames[i] , chess);
         score += pawnEval(squareNames[i] , chess);
-        score += conquer(squareNames[i] , chess);
         score += development(squareNames[i] , chess);
     }
+    // score += conquer(chess)
     score = isWhite ? -score : score;
     if(["c1" , "g1" , "c8" , "g8"].includes(ourKing) && numberOfPieces > 24){
         score += 0.5
@@ -693,13 +654,19 @@ function minimax(fen , depth , isMaximizing, steps , alpha , beta , skips , isWh
         return evaluate(fen , isWhite , depth);
     }
 
-    if(TT.has(fen) && TT.get(fen)[1] == maxDepth){
+    if(TT.has(fen) && TT.get(fen)[1] == maxDepth && false){
         skips.count++;
         return TT.get(fen)[0];
     }else{
         let moves = BasicSorting(base);
         if(MovesMap.has(fen)){
-            moves = MovesMap.get(fen)
+            moves = MovesMap.get(fen)}
+        else if(depth == maxDepth - 1){
+            
+            moves = moves.filter(move => { return move.isCapture();})
+            if(moves.length == 0){
+                return evaluate(fen , isWhite , depth)
+            }
         }
 
         if(isMaximizing){
@@ -758,15 +725,16 @@ export function engine(fen , isWhite = false){
             }
         }
     }
-    console.time("sorting time")
-    const MovesMap = searchSorting2(fen , isWhite);
-    console.timeEnd("sorting time")
+    // console.time("sorting time")
+    const MovesMap = searchSorting(fen , isWhite);
+    // console.timeEnd("sorting time")
     // const MovesMap = new Map();
     let moves = BasicSorting(chess)
     if(MovesMap.has(fen)){
         moves = MovesMap.get(fen)
         // console.log(moves.map(move => { return {from: move.from() , to: move.to()}}))
     }
+
 
 
 
@@ -790,7 +758,12 @@ export function engine(fen , isWhite = false){
                 }
             }
         }
-        let score = minimax(chess.fen() , 0 , false , steps , -Infinity , Infinity , skips , isWhite , maxdepth , MovesMap)
+        let score = -9999
+        if(TT.has(chess.fen())){
+            score = TT.get(chess.fen())
+        }else{
+            score = minimax(chess.fen() , 0 , false , steps , -Infinity , Infinity , skips , isWhite , maxdepth , MovesMap)
+        }
         if(numberOfPieces <= 4){
             score += forceKingToCornerEndgameEval(ourKing , enemyKing , ourRooks , fen);
         }
@@ -800,11 +773,11 @@ export function engine(fen , isWhite = false){
         }
         chess = new Position(fen)
     }
-    console.log("score is " , bestScore)
-    console.log("bestMove : " , [bestMove.from() , bestMove.to()] , bestScore , "number of eval : " , steps.count , "number of skips : " , skips.count)
-    console.log("transposition table size after this move " , TT.size)
-    return [bestMove.from() , bestMove.to() , bestMove.isCastling()];
-    // return `${bestMove.from()}${bestMove.to()}`
+    // console.log("score is " , bestScore)
+    // console.log("bestMove : " , [bestMove.from() , bestMove.to()] , bestScore , "number of eval : " , steps.count , "number of skips : " , skips.count)
+    // console.log("transposition table size after this move " , TT.size)
+    // return [bestMove.from() , bestMove.to() , bestMove.isCastling()];
+    return `${bestMove.from()}${bestMove.to()}`
 }
 
 
@@ -813,24 +786,34 @@ export function engine(fen , isWhite = false){
 
 
 
-// const args = process.argv.slice(2); // Skip the first two default arguments
-// if (args.length >= 1) {
-//     const result = engine(args[0]);
-//     console.log(result); // Output the result to stdout
-// } else {
-//     console.log("Not enough arguments provided.");
-// }
-
-console.time("time")
-
-engine("r2q1rk1/ppp2ppp/2n2n2/2bpp3/2BPP3/2N2N2/PPP2PPP/R1BQ1RK1 w - - 0 1" , false) // 39 move
-
-
-console.timeEnd("time")
+const args = process.argv.slice(2); // Skip the first two default arguments
+if (args.length >= 1) {
+    const result = engine(args[0]);
+    console.log(result); // Output the result to stdout
+} else {
+    console.log("Not enough arguments provided.");
+}
 
 // console.time("time")
 
-// console.log(searchSorting2("r2q1rk1/ppp2ppp/2n2n2/2bpp3/2BPP3/2N2N2/PPP2PPP/R1BQ1RK1 w - - 0 1" , false))
+// // for(let i = 0; i < 100000; i++){
+//     console.log(engine("r2q1rk1/ppp2ppp/2n2n2/2bpp3/2BPP3/2N2N2/PPP2PPP/R1BQ1RK1 w - - 0 1" , false))
+// // }
+
+// console.timeEnd("time")
+
+
+
+// console.time("time")
+
+// console.log(engine("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1" , false)) // starting position
+
+
+// console.timeEnd("time")
+
+// console.time("time")
+
+// console.log(engine("r2q1rk1/ppp2ppp/2n2n2/2bpp3/2BPP3/2N2N2/PPP2PPP/R1BQ1RK1 w - - 0 1" , false))
 
 // console.timeEnd("time")
 

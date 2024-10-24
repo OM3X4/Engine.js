@@ -21,7 +21,7 @@ while not board.is_game_over():
         white_move_start = time.time()  # Start timing for white move
 
         current_fen = board.fen()
-        move_san = subprocess.run(["node", "./EngineKO6.js", current_fen], capture_output=True, text=True).stdout.strip()
+        move_san = subprocess.run(["node", "./EngineKO7.js", current_fen], capture_output=True, text=True).stdout.strip()
         
         try:
             move = board.parse_uci(move_san)

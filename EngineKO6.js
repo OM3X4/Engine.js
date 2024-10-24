@@ -304,11 +304,11 @@ function searchSorting(fen ,isWhite){
         });
         // innerMoves1 = innerMoves1.map(move => { return {from: move.from() , to:move.to()}})
         scoreCounter.set(move , BestScore)
-        fenMove.set(innerFen , innerMoves1.slice(0 , 100))
+        fenMove.set(innerFen , innerMoves1.slice(0 , 20))
     }
     let moves1 = moves.sort((a  , b ) => scoreCounter.get(b) - scoreCounter.get(a))
     // moves1 = moves1.map(move => { return {from: move.from() , to:move.to()}})
-    fenMove.set(fen , moves1.slice(0 , 100))
+    fenMove.set(fen , moves1.slice(0 , 15))
 
     return fenMove
 
@@ -600,7 +600,7 @@ function evaluate(fen , isWhite , depth){
         }
         score += material(squareNames[i] , chess);
         score += pawnEval(squareNames[i] , chess);
-        score += conquer(squareNames[i] , chess);
+        // score += conquer(squareNames[i] , chess);
         score += development(squareNames[i] , chess);
     }
     score = isWhite ? -score : score;
@@ -639,9 +639,13 @@ function minimax(fen , depth , isMaximizing, steps , alpha , beta , skips , isWh
     }else{
         let moves = BasicSorting(base);
         if(MovesMap.has(fen)){
-            moves = MovesMap.get(fen)
-        }else if(depth == maxDepth - 1){
+            moves = MovesMap.get(fen)}
+        else if(depth == maxDepth - 1){
+            
             moves = moves.filter(move => { return move.isCapture();})
+            if(moves.length == 0){
+                return evaluate(fen , isWhite , depth)
+            }
         }
 
         if(isMaximizing){
@@ -653,7 +657,7 @@ function minimax(fen , depth , isMaximizing, steps , alpha , beta , skips , isWh
                 bestScore = Math.max(bestScore, score);
                 alpha = (alpha < score ? score : alpha);
                 if(alpha >= beta){
-                    break;
+                    // break;
                 }
             }
             TT.set(fen , [bestScore , maxDepth])
@@ -667,7 +671,7 @@ function minimax(fen , depth , isMaximizing, steps , alpha , beta , skips , isWh
                 bestScore = Math.min(bestScore, score);
                 beta = (beta < score ? beta : score);
                 if(alpha >= beta){
-                    break;
+                    // break;
                 }
             }
             TT.set(fen , [bestScore , maxDepth])
@@ -688,7 +692,7 @@ export function engine(fen , isWhite = false){
             numberOfPieces++;
         }
     }
-    const maxdepth = 5
+    const maxdepth = 4
     const moveOpening = BasicSorting(chess)
     const opening = getOpeningMove(fen);
     if(opening != 0){
@@ -755,13 +759,24 @@ export function engine(fen , isWhite = false){
 
 
 
-const args = process.argv.slice(2); // Skip the first two default arguments
-if (args.length >= 1) {
-    const result = engine(args[0]);
-    console.log(result); // Output the result to stdout
-} else {
-    console.log("Not enough arguments provided.");
-}
+// const args = process.argv.slice(2); // Skip the first two default arguments
+// if (args.length >= 1) {
+//     const result = engine(args[0]);
+//     console.log(result); // Output the result to stdout
+// } else {
+//     console.log("Not enough arguments provided.");
+// }
+
+
+console.time("time")
+
+// for(let i = 0; i < 100000; i++){
+    engine("r2q1rk1/ppp2ppp/2n2n2/2bpp3/2BPP3/2N2N2/PPP2PPP/R1BQ1RK1 w - - 0 1" , false)
+// }
+
+console.timeEnd("time")
+
+
 
 // console.time("time")
 

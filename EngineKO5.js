@@ -281,7 +281,7 @@ function searchSorting(fen , isWhite = true){
     
     if(moves.length > 3){
         
-        return moves.slice(0 , 3)
+        return moves.slice(0 , 100)
     }else {
         return moves
     }
@@ -657,7 +657,7 @@ export function engine(fen , isWhite = true){
             numberOfPieces++;
         }
     }
-    const maxdepth = 4
+    const maxdepth = 3
     let moves = BasicSorting(chess)
     const opening = getOpeningMove(fen);
     if(opening != 0){
@@ -669,7 +669,7 @@ export function engine(fen , isWhite = true){
             }
         }
     }
-    // moves = searchSorting(fen , isWhite);
+    moves = searchSorting(fen , isWhite);
 
 
 
